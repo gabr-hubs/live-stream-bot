@@ -1,0 +1,26 @@
+name: Facebook Live Stream
+
+on:
+  workflow_dispatch:
+    inputs:
+      stream_url:
+        description: "HLS Stream URL"
+        required: true
+      rtmp_url:
+        description: "Facebook RTMP URL"
+        required: true
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install FFmpeg
+        run: |
+          sudo apt update
+          sudo apt install ffmpeg -y
+
+      - name: Start Streaming
+        run: |
+          ffmpeg -re -i "${{ github.event.inputs.stream_url }}" \
+          -c copy -f flv "${{ github.event.inputs.rtmp_url }}"
