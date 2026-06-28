@@ -2,30 +2,29 @@ name: Stream Bot
 
 on:
   workflow_dispatch:
+    inputs:
+      stream_url:
+        description: "Stream URL"
+        required: true
+      rtmp_url:
+        description: "RTMP URL"
+        required: true
 
 jobs:
   stream:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm install
+      - run: npm install
 
-      - name: Install Playwright
-        run: npx playwright install chromium
+      - run: npx playwright install chromium
 
-      - name: Run extractor
-        run: node extractor.js "${{ inputs.stream_url }}"
+      - run: node extractor.js "${{ inputs.stream_url }}"
 
-      - name: Run FFmpeg
-        run: |
-          ffmpeg -re -i "$(cat stream.txt)" \
-          -f flv "${{ inputs.rtmp_url }}"
+      - run: ffmpeg -re -i "$(cat stream.txt)" -f flv "${{ inputs.rtmp_url }}"
