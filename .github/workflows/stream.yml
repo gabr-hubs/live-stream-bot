@@ -1,10 +1,10 @@
-name: Facebook Live Stream
+name: Stream Bot
 
 on:
   workflow_dispatch:
     inputs:
       stream_url:
-        description: "HLS Stream URL"
+        description: "HLS Page URL"
         required: true
       rtmp_url:
         description: "Facebook RTMP URL"
@@ -15,12 +15,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install FFmpeg
-        run: |
-          sudo apt update
-          sudo apt install ffmpeg -y
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Start Streaming
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install playwright
+
+      - name: Extract real m3u8 URL
+        run: node extractor.js "${{ inputs.stream_url }}"
+
+      - name: Run FFmpeg
         run: |
-          ffmpeg -re -i "${{ github.event.inputs.stream_url }}" \
-          -c copy -f flv "${{ github.event.inputs.rtmp_url }}"
+          ffmpeg -re -i "$(cat stream.txt)" \
+          -c:v libx264 -preset veryfast -maxrate 2500k -bufsize 5000k \
+          -c:a aac -b:a 128k -f flv "${{ inputs.rtmp_url }}"
