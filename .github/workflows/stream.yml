@@ -4,10 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       stream_url:
-        description: "Stream URL"
         required: true
       rtmp_url:
-        description: "RTMP URL"
         required: true
 
 jobs:
@@ -23,7 +21,7 @@ jobs:
       - name: Install Playwright
         run: npx playwright install chromium
 
-      - name: Run Extractor
+      - name: Run extractor
         run: node extractor.js "${{ inputs.stream_url }}"
 
       - name: Run FFmpeg
