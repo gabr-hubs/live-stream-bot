@@ -1,54 +1,69 @@
 const { chromium } = require('playwright');
-const fs = require('fs');
+
+const TARGET_URL = process.argv[2];
 
 (async () => {
-  const url = process.argv[2];
+    console.log('🚀 STREAM ENGINE STARTED');
 
-  const browser = await chromium.launch({
-    headless: true
-  });
+    const browser = await chromium.launch({
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage'
+        ]
+    });
 
-  const context = await browser.newContext({
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120 Safari/537.36',
-    extraHTTPHeaders: {
-      'Referer': 'https://a8.kora-plus.app/',
-      'Origin': 'https://a8.kora-plus.app'
-    }
-  });
+    const context = await browser.newContext({
+        viewport: { width: 1280, height: 720 },
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123 Safari/537.36'
+    });
 
-  const page = await context.newPage();
+    const page = await context.newPage();
 
-  let m3u8 = null;
+    let foundStream = null;
 
-  // التقاط كل الطلبات الشبكية
-  page.on('response', async (response) => {
+    // التقاط الطلبات مباشرة
+    page.on('request', (req) => {
+        const url = req.url();
+
+        if (url.includes('.m3u8')) {
+            console.log('🎥 FOUND STREAM:', url);
+            foundStream = url;
+        }
+    });
+
     try {
-      const resUrl = response.url();
+        console.log('🌐 Opening:', TARGET_URL);
 
-      if (resUrl.includes('.m3u8')) {
-        console.log('🎯 FOUND M3U8:', resUrl);
-        m3u8 = resUrl;
-      }
-    } catch (e) {}
-  });
+        await page.goto(TARGET_URL, {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
 
-  console.log('🚀 Opening page:', url);
+        await page.waitForTimeout(5000);
 
-  await page.goto(url, {
-    waitUntil: 'networkidle',
-    timeout: 60000
-  });
+        // محاولة تشغيل الفيديو
+        await page.mouse.click(640, 360).catch(() => {});
 
-  // انتظار إضافي لتحميل الـ stream
-  await page.waitForTimeout(8000);
+        await page.waitForTimeout(10000);
 
-  await browser.close();
+        await browser.close();
 
-  if (!m3u8) {
-    console.log('❌ NO STREAM FOUND');
-    process.exit(1);
-  }
+        if (!foundStream) {
+            console.log('❌ NO STREAM FOUND');
+            process.exit(1);
+        }
 
-  fs.writeFileSync('stream.txt', m3u8);
-  console.log('✅ Saved:', m3u8);
+        // حفظ الرابط
+        const fs = require('fs');
+        fs.writeFileSync('stream.txt', foundStream);
+
+        console.log('✅ STREAM SAVED:', foundStream);
+
+    } catch (err) {
+        console.log('❌ ERROR:', err.message);
+        await browser.close();
+        process.exit(1);
+    }
 })();
