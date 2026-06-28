@@ -59,7 +59,7 @@ const TARGET_URL = process.argv[2];
         fs.writeFileSync('stream.txt', foundStream);
 
         console.log('✅ STREAM SAVED:', foundStream);
-
+console.log('FINAL STREAM:', foundStream);
     } catch (err) {
         console.log('❌ ERROR:', err.message);
         await browser.close();
