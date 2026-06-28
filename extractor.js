@@ -1,4 +1,5 @@
 const { chromium } = require('playwright');
+const fs = require('fs');
 
 const TARGET_URL = process.argv[2];
 
@@ -23,7 +24,7 @@ const TARGET_URL = process.argv[2];
 
     let foundStream = null;
 
-    // التقاط الطلبات مباشرة
+    // التقاط طلبات m3u8
     page.on('request', (req) => {
         const url = req.url();
 
@@ -43,7 +44,7 @@ const TARGET_URL = process.argv[2];
 
         await page.waitForTimeout(5000);
 
-        // محاولة تشغيل الفيديو
+        // محاولة تشغيل الفيديو (اختياري)
         await page.mouse.click(640, 360).catch(() => {});
 
         await page.waitForTimeout(10000);
@@ -55,8 +56,6 @@ const TARGET_URL = process.argv[2];
             process.exit(1);
         }
 
-        // حفظ الرابط
-        const fs = require('fs');
         fs.writeFileSync('stream.txt', foundStream);
 
         console.log('✅ STREAM SAVED:', foundStream);
