@@ -2,13 +2,6 @@ name: Stream Bot
 
 on:
   workflow_dispatch:
-    inputs:
-      stream_url:
-        description: "Page URL"
-        required: true
-      rtmp_url:
-        description: "Facebook RTMP"
-        required: true
 
 jobs:
   stream:
@@ -26,14 +19,13 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install Playwright browsers
+      - name: Install Playwright
         run: npx playwright install chromium
 
-      - name: Extract real stream
+      - name: Run extractor
         run: node extractor.js "${{ inputs.stream_url }}"
 
       - name: Run FFmpeg
         run: |
           ffmpeg -re -i "$(cat stream.txt)" \
-          -c:v libx264 -preset veryfast -maxrate 2500k -bufsize 5000k \
-          -c:a aac -b:a 128k -f flv "${{ inputs.rtmp_url }}"
+          -f flv "${{ inputs.rtmp_url }}"
