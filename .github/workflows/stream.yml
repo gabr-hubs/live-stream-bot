@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       stream_url:
-        description: "HLS Page URL"
+        description: "Page URL"
         required: true
       rtmp_url:
-        description: "Facebook RTMP URL"
+        description: "Facebook RTMP"
         required: true
 
 jobs:
@@ -18,15 +18,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Install dependencies
-        run: npm install playwright
+        run: npm install
 
-      - name: Extract real m3u8 URL
+      - name: Install Playwright browsers
+        run: npx playwright install chromium
+
+      - name: Extract real stream
         run: node extractor.js "${{ inputs.stream_url }}"
 
       - name: Run FFmpeg
